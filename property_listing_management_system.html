@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Listing Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Animated Gradient Background */
+        body {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #022c22);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card Styling */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.3);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <!-- Header Banner -->
+        <header class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+            <!-- Background Decorative Glow -->
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+            <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-teal-500 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+
+            <div class="text-center md:text-left z-10">
+                <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <div class="p-3 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl shadow-lg">
+                        <i class="fa-solid fa-city text-2xl text-white"></i>
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">
+                        AuraEstate
+                    </h1>
+                </div>
+                <p class="text-slate-300 text-sm sm:text-base max-w-md">
+                    Manage, search, and discover premium properties with dynamic real-time filtering and status control.
+                </p>
+            </div>
+
+            <!-- Header Quick Stats & View Switcher -->
+            <div class="flex flex-col sm:flex-row items-center gap-4 z-10 w-full md:w-auto">
+                <!-- Navigation Tabs -->
+                <div class="bg-slate-900/80 p-1.5 rounded-2xl border border-slate-700/60 flex w-full sm:w-auto">
+                    <button id="tabVisitor" onclick="switchTab('visitor')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg">
+                        <i class="fa-solid fa-eye"></i> Visitor View
+                    </button>
+                    <button id="tabAdmin" onclick="switchTab('admin')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-database"></i> All Listings (Admin)
+                    </button>
+                </div>
+
+                <button onclick="openAddModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30">
+                    <i class="fa-solid fa-plus-circle"></i> Add Property
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area Grid -->
+        <main class="space-y-8">
+
+            <!-- Search & Filter Controls Panel -->
+            <section class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Search & Filter
+                    </h2>
+                    <button onclick="resetFilters()" class="text-xs text-indigo-300 hover:text-indigo-100 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Location Filter -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Location</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="text" id="filterLocation" oninput="applyFilters()" placeholder="City, neighborhood..." class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Property Type Filter -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Property Type</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-house absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <select id="filterType" onchange="applyFilters()" class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm appearance-none cursor-pointer">
+                                <option value="" class="bg-slate-900 text-white">All Property Types</option>
+                                <option value="Apartment" class="bg-slate-900 text-white">Apartment</option>
+                                <option value="Villa" class="bg-slate-900 text-white">Villa</option>
+                                <option value="Studio" class="bg-slate-900 text-white">Studio</option>
+                                <option value="Commercial" class="bg-slate-900 text-white">Commercial</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Price Range: Min -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Min Price ($)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-dollar-sign absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="number" id="filterMinPrice" oninput="applyFilters()" placeholder="0" class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Price Range: Max -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Max Price ($)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-dollar-sign absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="number" id="filterMaxPrice" oninput="applyFilters()" placeholder="Any price" class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active View Banner Indicator -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+                <div>
+                    <h2 id="viewHeading" class="text-xl font-bold text-white flex items-center gap-2">
+                        Available Properties <span id="propertyCountBadge" class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">0 properties</span>
+                    </h2>
+                    <p id="viewDescription" class="text-xs text-slate-400 mt-1">
+                        Showing available listings for visitors. Sold and Rented items are safely preserved in the database.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/40 w-fit">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Available
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-500 ml-2"></span> Sold
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 ml-2"></span> Rented
+                </div>
+            </div>
+
+            <!-- Property Cards Grid -->
+            <div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be populated dynamically -->
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="emptyState" class="hidden glass-card rounded-2xl p-12 text-center max-w-lg mx-auto">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-2xl">
+                    <i class="fa-solid fa-building-circle-xmark"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">No Properties Found</h3>
+                <p class="text-slate-400 text-sm mb-6">Try adjusting your location, price, or property type filters to find what you're looking for.</p>
+                <button onclick="resetFilters()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-all">
+                    Clear Search Filters
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ADD / EDIT PROPERTY MODAL -->
+    <div id="propertyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50 transition-all duration-300 opacity-0">
+        <div class="glass-card max-w-xl w-full rounded-3xl p-6 sm:p-8 relative border border-slate-700/80 shadow-2xl transform scale-95 transition-transform duration-300" id="modalContainer">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700/60">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                        <i class="fa-solid fa-pen-to-square text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalTitle" class="text-xl font-bold text-white">Add Property</h3>
+                        <p class="text-xs text-slate-400">Fill in the complete details for the property listing</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="propertyForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="propId">
+
+                <!-- Store Title -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Listing Title</label>
+                    <input type="text" id="title" required placeholder="e.g. Modern Sunset Penthouse" class="glass-input w-full px-4 py-2.5 rounded-xl text-sm">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Location -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Location</label>
+                        <input type="text" id="location" required placeholder="e.g. Downtown, Miami" class="glass-input w-full px-4 py-2.5 rounded-xl text-sm">
+                    </div>
+
+                    <!-- Property Type -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Property Type</label>
+                        <select id="property_type" required class="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-none cursor-pointer">
+                            <option value="Apartment" class="bg-slate-900">Apartment</option>
+                            <option value="Villa" class="bg-slate-900">Villa</option>
+                            <option value="Studio" class="bg-slate-900">Studio</option>
+                            <option value="Commercial" class="bg-slate-900">Commercial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Price -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Price ($)</label>
+                        <input type="number" id="price" min="0" required placeholder="250000" class="glass-input w-full px-4 py-2.5 rounded-xl text-sm">
+                    </div>
+
+                    <!-- Availability Status -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Availability Status</label>
+                        <select id="status" required class="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-none cursor-pointer">
+                            <option value="Available" class="bg-slate-900">Available</option>
+                            <option value="Sold" class="bg-slate-900">Sold</option>
+                            <option value="Rented" class="bg-slate-900">Rented</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Description</label>
+                    <textarea id="description" rows="3" placeholder="Detailed property overview, amenities, features..." class="glass-input w-full px-4 py-2.5 rounded-xl text-sm resize-none"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end items-center gap-3 pt-4 border-t border-slate-700/60 mt-6">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white transition-all shadow-lg shadow-indigo-900/40">
+                        Save Listing
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="glass-card px-5 py-3 rounded-2xl flex items-center gap-3 border border-indigo-500/30 shadow-2xl">
+            <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <span id="toastMsg" class="text-sm font-medium text-white">Action completed successfully</span>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Pre-populated local database containing Available, Sold, and Rented properties
+        let propertyDatabase = [
+            {
+                id: 1,
+                title: "Grand Azure Luxury Villa",
+                location: "Malibu Bay",
+                property_type: "Villa",
+                price: 850000,
+                description: "Panoramic ocean view villa with infinite edge pool, smart home integration, and private beach access.",
+                status: "Available"
+            },
+            {
+                id: 2,
+                title: "Skyline High-rise Apartment",
+                location: "Downtown Metropolis",
+                property_type: "Apartment",
+                price: 340000,
+                description: "Contemporary 2-bedroom apartment with floor-to-ceiling glass windows and private balcony.",
+                status: "Available"
+            },
+            {
+                id: 3,
+                title: "Urban Minimalist Studio",
+                location: "Arts District",
+                property_type: "Studio",
+                price: 165000,
+                description: "Compact, sleek studio apartment located right next to central transit hubs and cafes.",
+                status: "Sold"
+            },
+            {
+                id: 4,
+                title: "Horizon Commercial Tower Floor",
+                location: "Financial District",
+                property_type: "Commercial",
+                price: 520000,
+                description: "Open-plan corporate office space complete with conference suites and high-speed fibre routing.",
+                status: "Rented"
+            },
+            {
+                id: 5,
+                title: "Pine Crest Suburban Home",
+                location: "Greenwood Suburbs",
+                property_type: "Villa",
+                price: 420000,
+                description: "Spacious 4-bedroom family home featuring a lush backyard, 2-car garage, and solar panels.",
+                status: "Available"
+            },
+            {
+                id: 6,
+                title: "Loft Studio by the Park",
+                location: "Central Park West",
+                property_type: "Studio",
+                price: 210000,
+                description: "High-ceiling rustic brick loft with modern kitchen appliances and cozy fireplace.",
+                status: "Rented"
+            }
+        ];
+
+        // Current Active View Mode: 'visitor' (Available only) or 'admin' (All records)
+        let currentView = 'visitor';
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPropertyListings();
+        });
+
+        // Switch View Tab (Visitor View vs Admin View)
+        function switchTab(view) {
+            currentView = view;
+            const btnVisitor = document.getElementById('tabVisitor');
+            const btnAdmin = document.getElementById('tabAdmin');
+            const viewHeading = document.getElementById('viewHeading');
+            const viewDescription = document.getElementById('viewDescription');
+
+            if (view === 'visitor') {
+                btnVisitor.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg";
+                btnAdmin.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center gap-2";
+                viewHeading.innerHTML = `Available Properties <span id="propertyCountBadge" class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">0 properties</span>`;
+                viewDescription.textContent = "Showing available listings for visitors. Sold and Rented items are safely preserved in the database.";
+            } else {
+                btnAdmin.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg";
+                btnVisitor.className = "flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all duration-300 flex items-center justify-center gap-2";
+                viewHeading.innerHTML = `All Database Records <span id="propertyCountBadge" class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">0 properties</span>`;
+                viewDescription.textContent = "Administrator View showing all listings (Available, Sold, and Rented records).";
+            }
+
+            renderPropertyListings();
+        }
+
+        // Apply Search & Filter criteria to dataset
+        function applyFilters() {
+            renderPropertyListings();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterLocation').value = '';
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterMinPrice').value = '';
+            document.getElementById('filterMaxPrice').value = '';
+            renderPropertyListings();
+            showToast("Filters reset successfully", "info");
+        }
+
+        // Render Property Cards based on Filter & Active View Mode
+        function renderPropertyListings() {
+            const grid = document.getElementById('propertyGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            const locationFilter = document.getElementById('filterLocation').value.trim().toLowerCase();
+            const typeFilter = document.getElementById('filterType').value;
+            const minPrice = parseFloat(document.getElementById('filterMinPrice').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('filterMaxPrice').value) || Infinity;
+
+            // Filter logic
+            const filteredData = propertyDatabase.filter(item => {
+                // Availability View logic: If visitor mode, ONLY show Available properties
+                if (currentView === 'visitor' && item.status !== 'Available') {
+                    return false;
+                }
+
+                const matchesLoc = item.location.toLowerCase().includes(locationFilter) || item.title.toLowerCase().includes(locationFilter);
+                const matchesType = typeFilter === "" || item.property_type === typeFilter;
+                const matchesPrice = item.price >= minPrice && item.price <= maxPrice;
+
+                return matchesLoc && matchesType && matchesPrice;
+            });
+
+            // Update property count badge
+            const countBadge = document.getElementById('propertyCountBadge');
+            if(countBadge) countBadge.textContent = `${filteredData.length} ${filteredData.length === 1 ? 'property' : 'properties'}`;
+
+            grid.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+
+                filteredData.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = "glass-card rounded-2xl p-5 flex flex-col justify-between card-hover relative group";
+
+                    // Badge Styling dynamically selected
+                    let badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
+                    let badgeIcon = "fa-circle-check";
+                    if (p.status === 'Sold') {
+                        badgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/40";
+                        badgeIcon = "fa-circle-xmark";
+                    } else if (p.status === 'Rented') {
+                        badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40";
+                        badgeIcon = "fa-key";
+                    }
+
+                    // Icon based on type
+                    let typeIcon = "fa-building";
+                    if(p.property_type === 'Villa') typeIcon = "fa-house-chimney";
+                    if(p.property_type === 'Studio') typeIcon = "fa-door-open";
+                    if(p.property_type === 'Commercial') typeIcon = "fa-briefcase";
+
+                    card.innerHTML = `
+                        <div>
+                            <!-- Card Header & Badge -->
+                            <div class="flex items-start justify-between gap-2 mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 flex items-center gap-1.5">
+                                    <i class="fa-solid ${typeIcon}"></i> ${p.property_type}
+                                </span>
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold border ${badgeClass} flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid ${badgeIcon} text-[10px]"></i> ${p.status}
+                                </span>
+                            </div>
+
+                            <!-- Title & Location -->
+                            <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1 mb-1">
+                                ${escapeHtml(p.title)}
+                            </h3>
+                            <p class="text-xs text-slate-400 flex items-center gap-1.5 mb-3">
+                                <i class="fa-solid fa-location-dot text-indigo-400"></i> ${escapeHtml(p.location)}
+                            </p>
+
+                            <!-- Description -->
+                            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed mb-4">
+                                ${escapeHtml(p.description || 'No description provided.')}
+                            </p>
+                        </div>
+
+                        <!-- Card Footer & Actions -->
+                        <div class="pt-4 border-t border-slate-700/50 flex items-center justify-between mt-2">
+                            <div>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Price</span>
+                                <span class="text-xl font-extrabold text-white">${formatCurrency(p.price)}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="openEditModal(${p.id})" title="Edit Property" class="w-8 h-8 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/30 text-indigo-300 flex items-center justify-center transition-all border border-indigo-500/20">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteProperty(${p.id})" title="Delete Property" class="w-8 h-8 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 flex items-center justify-center transition-all border border-rose-500/20">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // Open Modal for Adding Property
+        function openAddModal() {
+            document.getElementById('propertyForm').reset();
+            document.getElementById('propId').value = '';
+            document.getElementById('modalTitle').textContent = 'Add Property';
+            document.getElementById('status').value = 'Available';
+            showModal();
+        }
+
+        // Open Modal for Editing Property
+        function openEditModal(id) {
+            const p = propertyDatabase.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('propId').value = p.id;
+            document.getElementById('title').value = p.title;
+            document.getElementById('location').value = p.location;
+            document.getElementById('property_type').value = p.property_type;
+            document.getElementById('price').value = p.price;
+            document.getElementById('status').value = p.status;
+            document.getElementById('description').value = p.description || '';
+
+            document.getElementById('modalTitle').textContent = `Edit Property #${p.id}`;
+            showModal();
+        }
+
+        // Save / Update Property
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('propId').value;
+            const title = document.getElementById('title').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const property_type = document.getElementById('property_type').value;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const status = document.getElementById('status').value;
+            const description = document.getElementById('description').value.trim();
+
+            if (id) {
+                // Update Existing Record
+                const index = propertyDatabase.findIndex(p => p.id == id);
+                if (index !== -1) {
+                    propertyDatabase[index] = { id: Number(id), title, location, property_type, price, status, description };
+                    showToast("Property updated successfully!", "success");
+                }
+            } else {
+                // Add New Record
+                const newId = propertyDatabase.length > 0 ? Math.max(...propertyDatabase.map(p => p.id)) + 1 : 1;
+                propertyDatabase.unshift({ id: newId, title, location, property_type, price, status, description });
+                showToast("New property listing added!", "success");
+            }
+
+            closeModal();
+            renderPropertyListings();
+        }
+
+        // Delete Property Record
+        function deleteProperty(id) {
+            const index = propertyDatabase.findIndex(p => p.id === id);
+            if (index !== -1) {
+                const title = propertyDatabase[index].title;
+                propertyDatabase.splice(index, 1);
+                renderPropertyListings();
+                showToast(`Deleted "${title}"`, "warning");
+            }
+        }
+
+        // Modal Control Helpers
+        function showModal() {
+            const modal = document.getElementById('propertyModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('propertyModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = message;
+
+            if (type === 'warning') {
+                toastIcon.className = "w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm";
+                toastIcon.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            } else if (type === 'info') {
+                toastIcon.className = "w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm";
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            } else {
+                toastIcon.className = "w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm";
+                toastIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Format Currency Helper
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+        }
+
+        // Utility: Escaping HTML input strings
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
